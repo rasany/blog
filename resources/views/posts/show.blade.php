@@ -9,7 +9,7 @@
       *
       {{ $post->created_at->diffForHumans() }}
     </div>
-    {{ $post->content }}
+    {!! app(ParsedownExtra::class)->text($post->content) !!}
   </article>
 
   <div class="box-control text-center">

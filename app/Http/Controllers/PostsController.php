@@ -21,7 +21,8 @@ class PostsController extends Controller
      */
     public function index()
     {
-        $posts = Post::with('user')->paginate(3);
+
+        $posts = Post::with('user')->latest()->paginate(3);
 
         return view('posts.index', compact('posts'));
     }
@@ -100,5 +101,7 @@ class PostsController extends Controller
     public function destroy(Post $post)
     {
         $this->authorize('delete', $post);
+        $post->delete();
+        return response()->json([], 204); //204 no content
     }
 }
