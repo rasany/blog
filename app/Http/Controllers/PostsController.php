@@ -4,10 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use App\Http\Requests\PostsRequest;
+use App\Post;
 use App\Http\Requests;
 
 class PostsController extends Controller
 {
+    public function __construct(){
+      $this->middleware('auth', ['except'=>['index','show']]);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -15,7 +21,9 @@ class PostsController extends Controller
      */
     public function index()
     {
-        //
+        $posts = Post::with('user')->paginate(3);
+
+        return view('posts.index', compact('posts'));
     }
 
     /**
@@ -25,7 +33,9 @@ class PostsController extends Controller
      */
     public function create()
     {
-        //
+        $post = new Post;
+
+        return view('posts.create', compact('post'));
     }
 
     /**
@@ -34,9 +44,13 @@ class PostsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(PostsRequest $request)
     {
-        //
+        $post = $request->user()->posts()->create($request->all());
+
+        event(new \App\Events\PostCreated($post));
+
+        return redirect(route('posts.show', $post->id));
     }
 
     /**
@@ -45,9 +59,10 @@ class PostsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Post $post)
     {
-        //
+        $post->load('user');
+        return view('posts.show', compact('post'));
     }
 
     /**
@@ -56,9 +71,10 @@ class PostsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Post $post)
     {
-        //
+        $this->authorize('update', $post);
+        return view('posts.edit', compact('post'));
     }
 
     /**
@@ -68,9 +84,11 @@ class PostsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(PostsRequest $request, Post $post)
     {
-        //
+        $this->authorize('update', $post);
+        $post->update($request->all());
+        return redirect(route('posts.show', $post->id));
     }
 
     /**
@@ -79,8 +97,8 @@ class PostsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Post $post)
     {
-        //
+        $this->authorize('delete', $post);
     }
 }
